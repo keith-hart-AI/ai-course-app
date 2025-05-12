@@ -1,0 +1,90 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Course App</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 font-sans">
+  <div class="container mx-auto p-4">
+    <h1 class="text-3xl font-bold text-center mb-6">AI Learning Course App</h1>
+    <div class="mb-4">
+      <h2 class="text-xl font-semibold">Progress</h2>
+      <div class="w-full bg-gray-200 rounded-full h-4">
+        <div id="progress-bar" class="bg-blue-600 h-4 rounded-full" style="width: 0%"></div>
+      </div>
+      <p id="progress-text" class="text-sm mt-1">0% Complete (0/14 lessons)</p>
+    </div>
+    <div id="modules" class="space-y-4"></div>
+  </div>
+
+  <script>
+    const course = [
+      {
+        module: "Module 1: Foundations of AI",
+        lessons: [
+          { id: 1, title: "Introduction to AI", description: "Understand AI, its history, and applications.", resources: "Coursera’s AI For Everyone", link: "https://www.coursera.org/learn/ai-for-everyone", tasks: "Watch Week 1 videos, write 100-word summary.", quiz: ["What is AI?", "Key AI applications"] },
+          { id: 2, title: "Python for AI", description: "Learn Python basics for AI.", resources: "Google’s Python Class", link: "https://developers.google.com/edu/python", tasks: "Complete exercises 1-4, write a script.", quiz: ["Python variables", "Loop syntax"] },
+          { id: 3, title: "Math for AI", description: "Cover linear algebra and statistics basics.", resources: "Khan Academy’s Linear Algebra", link: "https://www.khanacademy.org/math/linear-algebra", tasks: "Watch matrix videos, solve 10 problems.", quiz: ["Vector definition", "Matrix operations"] }
+        ]
+      },
+      {
+        module: "Module 2: Machine Learning Basics",
+        lessons: [
+          { id: 4, title: "ML Concepts", description: "Learn supervised vs. unsupervised learning.", resources: "Coursera’s Machine Learning", link: "https://www.coursera.org/learn/machine-learning", tasks: "Watch videos, summarize concepts.", quiz: ["Supervised learning", "Regression types"] },
+          { id: 5, title: "Data Handling", description: "Clean and preprocess data using pandas.", resources: "Kaggle’s Pandas Course", link: "https://www.kaggle.com/learn/pandas", tasks: "Complete 3 lessons, clean dataset.", quiz: ["Pandas functions", "Data cleaning"] },
+          { id: 6, title: "Building ML Models", description: "Train a simple model using scikit-learn.", resources: "Kaggle’s Intro to ML", link: "https://www.kaggle.com/learn/intro-to-machine-learning", tasks: "Build decision tree, submit to Kaggle.", quiz: ["Model training", "Scikit-learn basics"] }
+        ]
+      },
+      {
+        module: "Module 3: Deep Learning & LLMs",
+        lessons: [
+          { id: 7, title: "Neural Networks", description: "Understand neural networks and deep learning.", resources: "edX’s Deep Learning Explained", link: "https://www.edx.org/course/deep-learning-explained", tasks: "Watch lectures, diagram a network.", quiz: ["Neural network layers", "Activation functions"] },
+          { id: 8, title: "LLMs and NLP", description: "Explore large language models and NLP.", resources: "Hugging Face’s NLP Course", link: "https://huggingface.co/course", tasks: "Complete chapters 1-3, fine-tune model.", quiz: ["NLP tasks", "LLM applications"] }
+        ]
+      },
+      {
+        module: "Module 4: Practical Applications & Career Prep",
+        lessons: [
+          { id: 9, title: "AI Projects", description: "Build and present a small AI project.", resources: "Kaggle datasets", link: "https://www.kaggle.com/datasets", tasks: "Create project, upload to GitHub.", quiz: ["Project planning", "GitHub usage"] },
+          { id: 10, title: "AI Ethics", description: "Learn ethical considerations in AI.", resources: "Google’s AI Ethics Course", link: "https://ai.google/responsibility/principles/", tasks: "Read principles, write 200-word reflection.", quiz: ["AI bias", "Ethical
